@@ -1,212 +1,316 @@
-# Django CRM System
+# KPA Form Data API
 
-A comprehensive Customer Relationship Management (CRM) system built with Django and modern HTML/CSS frontend using Bootstrap 5.
+A FastAPI-based backend system for managing KPA form data with user authentication, form submissions, and file uploads. This project implements RESTful APIs with PostgreSQL database integration.
 
 ## Features
 
 ### Core Functionality
-- **Dashboard**: Overview with statistics, recent activities, and quick actions
-- **Companies**: Manage company information and track relationships
-- **Contacts**: Store and manage contact details with company associations
-- **Leads**: Track potential customers through the sales pipeline
-- **Deals**: Manage sales opportunities with stages and probability tracking
-- **Activities**: Schedule and track tasks, calls, meetings, and notes
+- **User Authentication**: JWT-based authentication with phone number login
+- **Form Management**: Submit, retrieve, update, and delete form submissions
+- **File Upload**: Secure file attachment system with validation
+- **Database Integration**: PostgreSQL database with SQLAlchemy ORM
+- **API Documentation**: Auto-generated Swagger/OpenAPI documentation
 
 ### Key Features
-- **Modern UI**: Bootstrap 5 with custom styling and responsive design
-- **User Authentication**: Django's built-in authentication system
-- **Search & Filtering**: Advanced search capabilities across all modules
-- **Pagination**: Efficient data handling with paginated views
-- **Admin Interface**: Full Django admin integration for data management
-- **Database**: SQLite database with proper relationships and constraints
+- **Security**: JWT tokens, password hashing, input validation
+- **File Handling**: Support for multiple file types with size limits
+- **Error Handling**: Comprehensive error responses with proper HTTP status codes
+- **CORS Support**: Cross-origin resource sharing for frontend integration
+- **Docker Support**: Containerized deployment with Docker Compose
 
 ## Technology Stack
 
-- **Backend**: Django 5.2.4
-- **Frontend**: HTML5, CSS3, Bootstrap 5.1.3, Font Awesome 6.0.0
-- **Database**: SQLite (easily configurable for PostgreSQL/MySQL)
-- **Python**: 3.13+
+- **Backend**: FastAPI 0.104.1
+- **Database**: PostgreSQL with SQLAlchemy 2.0.23
+- **Authentication**: JWT with python-jose, bcrypt password hashing
+- **File Upload**: python-multipart for form data handling
+- **Containerization**: Docker & Docker Compose
+- **Python**: 3.11+
 
 ## Installation & Setup
 
-### 1. Clone the Repository
+### Method 1: Using Docker (Recommended)
+
+1. **Clone the Repository**
 ```bash
 git clone <repository-url>
-cd crm-system
+cd kpa-form-api
 ```
 
-### 2. Create Virtual Environment
+2. **Run with Docker Compose**
+```bash
+docker-compose up --build
+```
+
+The API will be available at `http://localhost:8000`
+
+### Method 2: Local Development
+
+1. **Clone the Repository**
+```bash
+git clone <repository-url>
+cd kpa-form-api
+```
+
+2. **Create Virtual Environment**
 ```bash
 python3 -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-### 3. Install Dependencies
+3. **Install Dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Database Setup
+4. **Set up PostgreSQL Database**
 ```bash
-python manage.py makemigrations
-python manage.py migrate
+# Create database
+createdb kpa_forms
+
+# Or using psql
+psql -c "CREATE DATABASE kpa_forms;"
 ```
 
-### 5. Create Superuser
+5. **Configure Environment Variables**
 ```bash
-python manage.py createsuperuser
+cp .env.example .env
+# Edit .env with your database credentials
 ```
 
-### 6. Run Development Server
+6. **Initialize Database**
 ```bash
-python manage.py runserver
+python init_db.py
 ```
 
-The application will be available at `http://localhost:8000`
+7. **Run Development Server**
+```bash
+uvicorn main:app --reload
+```
+
+The API will be available at `http://localhost:8000`
+
+## API Documentation
+
+Once the server is running, access the interactive API documentation:
+
+- **Swagger UI**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
 
 ## Default Login Credentials
 
-For quick testing, a default admin user is created:
-- **Username**: admin
-- **Password**: admin123
+For testing purposes, a default user is created:
+- **Phone Number**: `7760873976`
+- **Password**: `to_share@123`
+
+## API Endpoints
+
+### Authentication Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/auth/register` | Register a new user |
+| POST | `/api/v1/auth/login` | Login user and get JWT token |
+| GET | `/api/v1/auth/me` | Get current user information |
+| POST | `/api/v1/auth/logout` | Logout user |
+
+### Form Management Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/forms/submit` | Submit a new form |
+| GET | `/api/v1/forms/submissions` | Get user's form submissions |
+| GET | `/api/v1/forms/submissions/{id}` | Get specific form submission |
+| PUT | `/api/v1/forms/submissions/{id}` | Update form submission |
+| DELETE | `/api/v1/forms/submissions/{id}` | Delete form submission |
+| POST | `/api/v1/forms/submissions/{id}/upload` | Upload file attachment |
+| GET | `/api/v1/forms/types` | Get available form types |
 
 ## Project Structure
 
 ```
-crm-system/
-├── crm/                    # Main CRM application
-│   ├── models.py          # Database models
-│   ├── views.py           # View functions
-│   ├── forms.py           # Django forms
-│   ├── admin.py           # Admin configuration
-│   └── urls.py            # URL patterns
-├── templates/             # HTML templates
-│   ├── base.html          # Base template
-│   └── crm/               # CRM-specific templates
-├── static/                # Static files
-│   └── css/
-│       └── custom.css     # Custom styling
-├── crm_project/           # Django project settings
-└── requirements.txt       # Python dependencies
+kpa-form-api/
+├── main.py                 # FastAPI application entry point
+├── database.py             # Database configuration
+├── models.py               # SQLAlchemy database models
+├── schemas.py              # Pydantic request/response schemas
+├── auth_utils.py           # Authentication utilities
+├── init_db.py              # Database initialization script
+├── routers/                # API route modules
+│   ├── __init__.py
+│   ├── auth.py             # Authentication routes
+│   └── forms.py            # Form management routes
+├── uploads/                # File upload directory
+├── requirements.txt        # Python dependencies
+├── Dockerfile              # Docker configuration
+├── docker-compose.yml      # Docker Compose configuration
+├── .env                    # Environment variables
+└── README.md               # Project documentation
 ```
 
 ## Database Models
 
-### Company
-- Company information (name, industry, website, contact details)
-- Address and location data
-- Timestamps for tracking
+### User
+- Phone number (unique identifier)
+- Password hash
+- Full name and email
+- Account status and timestamps
+- Relationship with form submissions
 
-### Contact
-- Personal information (name, email, phone)
-- Company association
-- Contact type classification
-- Assignment to users
-- Address and notes
+### FormSubmission
+- User association
+- Form type and JSON data
+- Submission status and timestamps
+- Relationship with file attachments
 
-### Lead
-- Potential customer information
-- Status tracking (New, Contacted, Qualified, Converted, Closed Lost)
-- Source tracking
-- Assignment and notes
+### FileAttachment
+- Form submission association
+- File metadata (name, type, size, path)
+- Upload timestamp
 
-### Deal
-- Sales opportunity tracking
-- Stage management (Prospecting to Closed Won/Lost)
-- Amount and probability
-- Expected close dates
-- Priority levels
+## Usage Examples
 
-### Activity
-- Task and event management
-- Types: Call, Email, Meeting, Task, Note
-- Status tracking and completion
-- Due dates and assignments
-- Links to contacts and deals
+### 1. User Registration
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/register" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number": "1234567890",
+    "password": "securepassword",
+    "full_name": "John Doe",
+    "email": "john@example.com"
+  }'
+```
 
-## Usage Guide
+### 2. User Login
+```bash
+curl -X POST "http://localhost:8000/api/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "phone_number": "7760873976",
+    "password": "to_share@123"
+  }'
+```
 
-### Dashboard
-- View system statistics and KPIs
-- See recent and upcoming activities
-- Quick access to create new records
-- Lead conversion rate tracking
+### 3. Submit Form
+```bash
+curl -X POST "http://localhost:8000/api/v1/forms/submit" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "form_type": "application_form",
+    "form_data": {
+      "name": "John Doe",
+      "age": 30,
+      "purpose": "Job Application"
+    }
+  }'
+```
 
-### Managing Companies
-1. Navigate to Companies section
-2. Add new companies with detailed information
-3. View company details and associated contacts/deals
-4. Search and filter companies
+### 4. Upload File
+```bash
+curl -X POST "http://localhost:8000/api/v1/forms/submissions/1/upload" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "file=@document.pdf"
+```
 
-### Managing Contacts
-1. Add contacts with company associations
-2. Categorize by type (Customer, Prospect, Partner, Vendor)
-3. Assign to team members
-4. Track activities and deals
+## Configuration
 
-### Managing Leads
-1. Capture leads from various sources
-2. Track through qualification process
-3. Convert qualified leads to contacts/deals
-4. Monitor conversion rates
+### Environment Variables
 
-### Managing Deals
-1. Create deals linked to contacts and companies
-2. Set deal stages and probability
-3. Track deal value and expected close dates
-4. Monitor sales pipeline
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://postgres:password@localhost:5432/kpa_forms` |
+| `SECRET_KEY` | JWT secret key | `your-super-secret-key-here-change-in-production` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | JWT token expiration time | `30` |
+| `PORT` | Application port | `8000` |
 
-### Managing Activities
-1. Schedule calls, meetings, and tasks
-2. Link activities to contacts and deals
-3. Track completion status
-4. View upcoming activities on dashboard
+### File Upload Limits
 
-## Customization
-
-### Styling
-- Modify `static/css/custom.css` for custom styling
-- Bootstrap 5 classes available throughout
-- CSS custom properties for easy theme changes
-
-### Models
-- Extend models in `crm/models.py`
-- Add custom fields or relationships
-- Create and run migrations after changes
-
-### Views & Templates
-- Customize views in `crm/views.py`
-- Modify templates in `templates/crm/`
-- Add new functionality as needed
-
-## API Considerations
-
-This system is designed as a web application with Django views. For API functionality:
-- Consider Django REST Framework integration
-- Add serializers for model data
-- Implement API endpoints for mobile/external access
+- **Allowed file types**: PDF, DOC, DOCX, TXT, JPG, JPEG, PNG, GIF
+- **Maximum file size**: 10MB
+- **Upload directory**: `uploads/`
 
 ## Security Features
 
-- Django's built-in CSRF protection
-- User authentication required for all views
-- SQL injection protection through ORM
-- XSS protection in templates
+- **JWT Authentication**: Secure token-based authentication
+- **Password Hashing**: bcrypt for secure password storage
+- **Input Validation**: Pydantic schemas for request validation
+- **File Type Validation**: Restricted file extensions and size limits
+- **CORS Configuration**: Configurable cross-origin resource sharing
 
-## Performance Optimizations
+## Testing
 
-- Database query optimization with `select_related()`
-- Pagination for large datasets
-- Efficient search with database indexes
-- Static file handling
+The API can be tested using:
+
+1. **Swagger UI**: Interactive testing at `/docs`
+2. **Postman**: Import the generated OpenAPI specification
+3. **curl**: Command-line testing (examples above)
+4. **Python requests**: Programmatic testing
+
+## Deployment
+
+### Production Deployment
+
+1. **Update Environment Variables**
+```bash
+# Use strong secret key
+SECRET_KEY=your-production-secret-key
+
+# Use production database
+DATABASE_URL=postgresql://user:password@host:port/database
+```
+
+2. **Deploy with Docker**
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+3. **Set up Reverse Proxy** (Nginx example)
+```nginx
+server {
+    listen 80;
+    server_name your-domain.com;
+    
+    location / {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+}
+```
+
+## Limitations & Assumptions
+
+- Phone number is used as the primary identifier for users
+- File uploads are stored locally (consider cloud storage for production)
+- JWT tokens don't have refresh mechanism (implement for production)
+- Form data is stored as JSON (flexible but less structured)
+- No email verification implemented
+- Basic file type validation (can be enhanced)
+
+## Future Enhancements
+
+- Email verification system
+- Refresh token mechanism
+- Cloud storage integration (AWS S3, Google Cloud)
+- Advanced form validation
+- Audit logging
+- Rate limiting
+- API versioning
+- Comprehensive test suite
+- CI/CD pipeline
+- Monitoring and logging integration
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/new-feature`)
 3. Make your changes
 4. Add tests if applicable
-5. Submit a pull request
+5. Commit your changes (`git commit -am 'Add new feature'`)
+6. Push to the branch (`git push origin feature/new-feature`)
+7. Create a Pull Request
 
 ## License
 
@@ -215,16 +319,7 @@ This project is open source and available under the MIT License.
 ## Support
 
 For questions or issues:
-1. Check the Django documentation
+1. Check the API documentation at `/docs`
 2. Review the code comments
 3. Create an issue in the repository
-
-## Future Enhancements
-
-- Email integration
-- Calendar synchronization
-- Reporting and analytics
-- Mobile responsive improvements
-- API development
-- Integration with external services
-- Advanced workflow automation
+4. Contact: `contact@suvidhaen.com`
